@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SONORA · Song List</title>
+<meta name="description" content="SONORA — reproductor y listado de canciones con roles de usuario y administrador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script>
+  /* Demo estática: simula la sesión que login.asp guarda con Session("username") */
+  (function () {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('sonora_session') || 'null'); } catch (e) {}
+
+    if (!s || !s.username) {
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('u')) {
+        s = { username: q.get('u'), role: q.get('r') === 'admin' ? 'admin' : 'normal' };
+        try { sessionStorage.setItem('sonora_session', JSON.stringify(s)); } catch (e) {}
+      }
+    }
+
+    if (!s || !s.username) { location.replace('login.html'); return; }
+
+    window.SONORA_SESSION = s;
+    document.documentElement.setAttribute('data-role', s.role === 'admin' ? 'admin' : 'normal');
+  })();
+</script>
+</head>
+<body data-mode="demo" data-role="admin">
+
+<div class="app">
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff5d8f"/>
+            <stop offset=".55" stop-color="#b05cff"/>
+            <stop offset="1" stop-color="#7c5cff"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="12" fill="url(#bm)"/>
+        <g fill="#180a1f">
+          <rect x="4"   y="17" width="3.2" height="6"  rx="1.6"/>
+          <rect x="8.8" y="14" width="3.2" height="12" rx="1.6"/>
+          <rect x="13.6" y="11" width="3.2" height="18" rx="1.6"/>
+          <rect x="18.4" y="9"  width="3.2" height="22" rx="1.6"/>
+          <rect x="23.2" y="11" width="3.2" height="18" rx="1.6"/>
+          <rect x="28"  y="14" width="3.2" height="12" rx="1.6"/>
+          <rect x="32.8" y="17" width="3.2" height="6"  rx="1.6"/>
+        </g>
+      </svg>
+      <span class="brand-name">SONORA</span>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item is-active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+        Inicio
+      </a>
+      <a class="nav-item" href="#lista">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5.5-5.5 2 2-5.5z"/></svg>
+        Explorar
+      </a>
+      <a class="nav-item" href="#lista">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5v14"/><path d="M9 5v14"/><path d="M14 5v14"/><path d="m19 5 1.5 14"/></svg>
+        Biblioteca
+      </a>
+    </nav>
+
+    <div>
+      <p class="side-title">Tus playlists</p>
+      <ul class="playlist">
+        <li><a href="#lista"><span class="dot"></span> Favoritas de la semana</a></li>
+        <li><a href="#lista"><span class="dot c2"></span> Para programar</a></li>
+        <li><a href="#lista"><span class="dot c3"></span> Noche de sintetizadores</a></li>
+        <li><a href="#lista"><span class="dot c4"></span> Café &amp; lluvia</a></li>
+      </ul>
+    </div>
+
+    <div class="side-foot">
+      <div class="avatar" data-bind="initial">A</div>
+      <div>
+        <p class="side-user" data-bind="user">usuario</p>
+        <p class="side-role" data-bind="role">Usuario</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================== MAIN ============================== -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="welcome">
+        <h1>¡Bienvenido, <span class="hl" data-bind="user" id="welcomeUser">usuario</span>! 👋</h1>
+        <p>Tu sesión está activa como <b data-bind="role">Usuario</b>. Disfruta de tu biblioteca musical.</p>
+      </div>
+      <div class="top-actions">
+        <span class="chip" id="roleChip">ADMIN</span>
+        <button class="btn ghost" data-action="logout" title="Cerrar sesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">Biblioteca musical</p>
+        <h2>Song List</h2>
+        <p class="hero-sub">
+          A continuación se presenta el listado de canciones — <strong>Song List</strong> — de tu biblioteca.
+          Puedes reproducir cualquier pista, buscar por título, artista, álbum o género; y si tu rol es
+          <strong>administrador</strong>, también crear, editar y eliminar registros.
+        </p>
+        <div class="hero-stats">
+          <div class="stat"><b id="statTotal">0</b><span>Canciones</span></div>
+          <div class="stat"><b id="statTime">0 min</b><span>Duración</span></div>
+          <div class="stat"><b id="statGenres">0</b><span>Géneros</span></div>
+        </div>
+        <button class="btn primary" id="btnPlayAll">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg>
+          Reproducir todo
+        </button>
+      </div>
+      <div class="hero-art">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.4" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9.2"/>
+          <circle cx="12" cy="12" r="2.4"/>
+          <path d="M12 2.8v6.8M12 14.4v6.8M2.8 12h6.8M14.4 12h6.8" opacity=".55"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ENCABEZADO DEL LISTADO -->
+    <div class="section-head" id="lista">
+      <div>
+        <h3>Listado de canciones</h3>
+        <p>Song List · tabla de pistas disponibles en la biblioteca</p>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="search" placeholder="Buscar canción, artista, álbum…" autocomplete="off">
+      </div>
+
+      <select class="select" id="filterGenre">
+        <option value="">Todos los géneros</option>
+        <option>Pop</option>
+        <option>Rock</option>
+        <option>Electrónica</option>
+        <option>Jazz</option>
+        <option>Indie</option>
+        <option>Latina</option>
+        <option>Acústica</option>
+        <option>Synthpop</option>
+      </select>
+
+      <button class="btn primary admin-only" id="btnNew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nueva canción
+      </button>
+
+      <button class="btn ghost admin-only" id="btnReset" title="Restaurar el listado original">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        Restaurar
+      </button>
+
+      <span class="counter" id="counter"><b>0</b> de <b>0</b> canciones</span>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="songs">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Canción</th>
+              <th>Álbum</th>
+              <th>Género</th>
+              <th>Año</th>
+              <th>Duración</th>
+              <th class="t-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="songRows"></tbody>
+        </table>
+      </div>
+
+      <div class="empty" id="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <p>No se encontraron canciones con ese criterio de búsqueda.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- =========================== REPRODUCTOR =========================== -->
+  <footer class="player">
+    <div class="now">
+      <div class="now-cover" id="playerCover">🎧</div>
+      <div class="now-meta">
+        <p class="now-title" id="playerTitle">Sin reproducción</p>
+        <p class="now-artist" id="playerArtist">Selecciona una canción del listado</p>
+      </div>
+    </div>
+
+    <div class="center-controls">
+      <div class="controls">
+        <button class="ctrl" id="btnShuffle" title="Aleatorio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+        </button>
+        <button class="ctrl" id="btnPrev" title="Anterior">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 5.5v13a1 1 0 0 1-1.55.83L8 13.5v5a1 1 0 0 1-2 0v-13a1 1 0 0 1 2 0v5l8.45-5.83A1 1 0 0 1 18 5.5z"/></svg>
+        </button>
+        <button class="ctrl main" id="btnPlay" title="Reproducir / Pausar">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg>
+        </button>
+        <button class="ctrl" id="btnNext" title="Siguiente">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5.5v13a1 1 0 0 0 1.55.83L16 13.5v5a1 1 0 0 0 2 0v-13a1 1 0 0 0-2 0v5L7.55 4.67A1 1 0 0 0 6 5.5z"/></svg>
+        </button>
+        <button class="ctrl" id="btnRepeat" title="Repetir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </button>
+      </div>
+      <div class="progress-row">
+        <span class="time" id="timeCur">0:00</span>
+        <input type="range" class="slider" id="seek" min="0" max="100" step="0.1" value="0" aria-label="Progreso de la canción">
+        <span class="time" id="timeTot">0:00</span>
+      </div>
+    </div>
+
+    <div class="right-controls">
+      <svg class="vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <div class="vol-wrap">
+        <input type="range" class="slider" id="volume" min="0" max="100" step="1" value="78" aria-label="Volumen">
+      </div>
+    </div>
+  </footer>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<!-- ======================= MODAL CREAR / EDITAR ======================= -->
+<div class="modal" id="modalSong" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Nueva canción</h3>
+        <p id="modalSub">Agrega una pista al listado.</p>
+      </div>
+      <button class="icon-btn" data-close title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <form id="formSong">
+      <div class="modal-body">
+        <input type="hidden" id="fId">
+
+        <div class="field full">
+          <label for="fTitle">Título *</label>
+          <input id="fTitle" type="text" placeholder="Ej. Neón de Medianoche" required>
+        </div>
+
+        <div class="field">
+          <label for="fArtist">Artista *</label>
+          <input id="fArtist" type="text" placeholder="Ej. Lúmina" required>
+        </div>
+
+        <div class="field">
+          <label for="fAlbum">Álbum</label>
+          <input id="fAlbum" type="text" placeholder="Ej. Ciudad Eléctrica">
+        </div>
+
+        <div class="field">
+          <label for="fGenre">Género</label>
+          <select id="fGenre">
+            <option>Pop</option>
+            <option>Rock</option>
+            <option>Electrónica</option>
+            <option>Jazz</option>
+            <option>Indie</option>
+            <option>Latina</option>
+            <option>Acústica</option>
+            <option>Synthpop</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fYear">Año</label>
+          <input id="fYear" type="number" min="1900" max="2100" placeholder="2025">
+        </div>
+
+        <div class="field">
+          <label for="fEmoji">Portada (emoji)</label>
+          <input id="fEmoji" type="text" maxlength="4" placeholder="🎵">
+        </div>
+
+        <div class="field full">
+          <label for="fFile">Archivo de audio</label>
+          <select id="fFile">
+            <option value="audio/track1.wav">track1.wav</option>
+            <option value="audio/track2.wav">track2.wav</option>
+            <option value="audio/track3.wav">track3.wav</option>
+            <option value="audio/track4.wav">track4.wav</option>
+            <option value="audio/track5.wav">track5.wav</option>
+            <option value="audio/track6.wav">track6.wav</option>
+            <option value="audio/track7.wav">track7.wav</option>
+            <option value="audio/track8.wav">track8.wav</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn primary">Guardar canción</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================== CONFIRMAR ========================== -->
+<div class="modal" id="modalConfirm" role="dialog" aria-modal="true">
+  <div class="modal-box confirm-box">
+    <div class="modal-head">
+      <div>
+        <h3>Eliminar canción</h3>
+        <p>Esta acción es permanente.</p>
+      </div>
+      <button class="icon-btn" data-close title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmText">¿Seguro que deseas eliminar esta canción?</p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn ghost" data-close>Cancelar</button>
+      <button type="button" class="btn danger" id="confirmYes">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/demo-store.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

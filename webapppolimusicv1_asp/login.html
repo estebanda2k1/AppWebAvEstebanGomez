@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SONORA · Iniciar sesión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="auth">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="bm2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff5d8f"/>
+            <stop offset=".55" stop-color="#b05cff"/>
+            <stop offset="1" stop-color="#7c5cff"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="12" fill="url(#bm2)"/>
+        <g fill="#180a1f">
+          <rect x="4"   y="17" width="3.2" height="6"  rx="1.6"/>
+          <rect x="8.8" y="14" width="3.2" height="12" rx="1.6"/>
+          <rect x="13.6" y="11" width="3.2" height="18" rx="1.6"/>
+          <rect x="18.4" y="9"  width="3.2" height="22" rx="1.6"/>
+          <rect x="23.2" y="11" width="3.2" height="18" rx="1.6"/>
+          <rect x="28"  y="14" width="3.2" height="12" rx="1.6"/>
+          <rect x="32.8" y="17" width="3.2" height="6"  rx="1.6"/>
+        </g>
+      </svg>
+      <span class="brand-name">SONORA</span>
+    </div>
+
+    <h1>Iniciar sesión</h1>
+    <p class="lead">Accede a tu biblioteca. El rol de tu cuenta determina<br>si puedes administrar el listado de canciones.</p>
+
+    <div class="alert" id="alert">Usuario o contraseña incorrectos.</div>
+
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label for="username">Usuario</label>
+        <input id="username" type="text" placeholder="admin" required>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••" required>
+      </div>
+      <button class="btn primary" type="submit">Entrar a SONORA</button>
+    </form>
+
+    <div class="demo-accounts">
+      <p>Cuentas de prueba</p>
+      <div class="demo-grid">
+        <button class="demo-btn" type="button" data-user="admin" data-pass="admin123" data-role="admin">
+          <b>Administrador</b>
+          <span>admin / admin123</span>
+        </button>
+        <button class="demo-btn" type="button" data-user="user" data-pass="user123" data-role="normal">
+          <b>Usuario normal</b>
+          <span>user / user123</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var USERS = [
+    { username: 'admin', password: 'admin123', role: 'admin' },
+    { username: 'user',  password: 'user123',  role: 'normal' }
+  ];
+
+  var form = document.getElementById('loginForm');
+  var alertBox = document.getElementById('alert');
+  var userInput = document.getElementById('username');
+  var passInput = document.getElementById('password');
+
+  function enter(username, role) {
+    // equivale a Session("username") = username en login.asp
+    try {
+      sessionStorage.setItem('sonora_session', JSON.stringify({ username: username, role: role }));
+    } catch (e) {}
+    // el parámetro va siempre: sirve de respaldo si el navegador bloquea el almacenamiento
+    window.location.href = 'index.html?u=' + encodeURIComponent(username) + '&r=' + role;
+  }
+
+  function attempt(username, password) {
+    var found = null;
+    for (var i = 0; i < USERS.length; i++) {
+      if (USERS[i].username.toLowerCase() === String(username).trim().toLowerCase() &&
+          USERS[i].password === password) { found = USERS[i]; break; }
+    }
+    if (!found) {
+      alertBox.classList.add('show');
+      passInput.value = '';
+      passInput.focus();
+      return;
+    }
+    alertBox.classList.remove('show');
+    enter(found.username, found.role);
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    attempt(userInput.value, passInput.value);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.demo-btn'), function (btn) {
+    btn.addEventListener('click', function () {
+      userInput.value = btn.getAttribute('data-user');
+      passInput.value = btn.getAttribute('data-pass');
+      enter(btn.getAttribute('data-user'), btn.getAttribute('data-role'));
+    });
+  });
+})();
+</script>
+</body>
+</html>

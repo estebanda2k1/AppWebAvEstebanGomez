@@ -1,0 +1,8 @@
+1|Neón de Medianoche|Lúmina|Ciudad Eléctrica|Synthpop|2024|0:27|🌃|audio/track1.wav
+2|Café a las Seis|Bruno Salas|Mañanas Lentas|Jazz|2022|0:31|☕|audio/track2.wav
+3|Gravedad Cero|Astral Kid|Órbita|Electrónica|2025|0:25|🚀|audio/track3.wav
+4|Lluvia en el Retrovisor|Valeria Norte|Ruta 9|Indie|2023|0:33|🌧️|audio/track4.wav
+5|Tambor de Sal|Costa Brava Sound|Marea|Latina|2021|0:29|🥁|audio/track5.wav
+6|Vidrio Roto|Kira Vane|Cristal|Rock|2020|0:24|💎|audio/track6.wav
+7|Jardín de Cobre|Mateo Rey|Botánica|Acústica|2024|0:35|🌿|audio/track7.wav
+8|Última Llamada|Nova Sur|Aeropuerto|Pop|2025|0:28|✈️|audio/track8.wav
